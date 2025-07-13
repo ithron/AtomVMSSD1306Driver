@@ -1,0 +1,11 @@
+{application, ssd1306_demo, [
+    {description, "An AtomVM application"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {applications, [
+        kernel, stdlib
+    ]},
+    {env,[]},
+    {licenses, []},
+    {links, []}
+ ]}.
