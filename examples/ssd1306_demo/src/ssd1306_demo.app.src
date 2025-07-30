@@ -1,5 +1,5 @@
 {application, ssd1306_demo, [
-    {description, "An AtomVM application"},
+    {description, "An AtomVM SSD1306 OLEAD demo"},
     {vsn, "0.1.0"},
     {registered, []},
     {applications, [

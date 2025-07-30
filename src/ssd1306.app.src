@@ -1,0 +1,10 @@
+{application, ssd1306,
+  [
+    {description, "SSD1306 OLED driver"},
+    {vsn, "0.1.0"},
+    {modules, [ssd1306]},
+    {registered, []},
+    {applications, [kernel, stdlib]},
+    {env, []}
+  ]}.
+
