@@ -18,6 +18,7 @@ start() ->
 %%      ssd1306:clear(Pid),
       io:format("SSD1306 display started with PID: ~p~n", [Pid]),
       ssd1306:set_inversion(Pid, false),
+      ssd1306:set_contrast(Pid, 0),
       loop(Pid, 0, 1);
     Error ->
       Error

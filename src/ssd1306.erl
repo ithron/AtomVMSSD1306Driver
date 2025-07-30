@@ -15,7 +15,7 @@ flip_horizontal.
 -type vertical_text_position() :: top | bottom | integer().
 
 %% API
--export([start_link/1, clear/1, set_inversion/2, set_contrast/1, set_bitmap/6, set_text/4]).
+-export([start_link/1, clear/1, set_inversion/2, set_contrast/2, set_bitmap/6, set_text/4]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -59,10 +59,10 @@ flip_horizontal.
 start_link(Opts) ->
   gen_server:start_link(?MODULE, Opts, []).
 
--spec set_contrast(integer()) -> ok | {error, any()}.
-set_contrast(Value) when is_integer(Value), Value >= 0, Value =< 255 ->
-  gen_server:call(?MODULE, {set_contrast, Value});
-set_contrast(_) ->
+-spec set_contrast(pid(), integer()) -> ok | {error, any()}.
+set_contrast(Display, Value) when is_integer(Value), Value >= 0, Value =< 255 ->
+  gen_server:cast(Display, {set_contrast, Value});
+set_contrast(_, _) ->
   {error, invalid_contrast}.
 
 -spec set_inversion(pid(), boolean()) -> ok | {error, any()}.
@@ -117,6 +117,10 @@ handle_cast({set_bitmap, X, Y, W, H, Bitmap}, State = #state{i2c = I2C, addr = A
 
 handle_cast({set_text, X, Y, Text}, State = #state{i2c = I2C, addr = Addr, num_pages = NPages}) ->
   do_set_text(X, Y, Text, I2C, Addr, NPages),
+  {noreply, State};
+
+handle_cast({set_contrast, Value}, #state{i2c = I2C, addr = Addr} = State) ->
+  do_set_contrast(Value, I2C, Addr),
   {noreply, State};
 
 handle_cast(Msg, State) ->
@@ -209,14 +213,19 @@ do_set_text(X, Y, Text, I2C, Addr, NPages) ->
   Bitmap = iolist_to_binary(Glyphs),
   Width = byte_size(Bitmap),
   ActualX = case X of
-    left -> 0;
-    center -> (128 - Width) div 2;
-    right -> 128 - Width;
-    _ when is_integer(X) -> X
-  end,
+              left -> 0;
+              center -> (128 - Width) div 2;
+              right -> 128 - Width;
+              _ when is_integer(X) -> X
+            end,
   ActualY = case Y of
-    top -> 0;
-    bottom -> (NPages - 1) * 8;
-    _ when is_integer(Y) -> Y
-  end,
+              top -> 0;
+              bottom -> (NPages - 1) * 8;
+              _ when is_integer(Y) -> Y
+            end,
   do_set_bitmap(ActualX, ActualY, Width, 8, Bitmap, I2C, Addr).
+
+do_set_contrast(Value, I2C, Addr) ->
+  Cmds = <<?CONTROL_CMD, ?CMD_CONTRAST, Value:8>>,
+  i2c:write_bytes(I2C, Addr, Cmds),
+  ok.
